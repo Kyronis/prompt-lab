@@ -1,0 +1,25 @@
+{
+  "name": "prompt-lab",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Prompt Lab - An open-source prompt tuning and evaluation platform",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "dev": "pnpm -r run dev",
+    "test": "vitest",
+    "lint": "pnpm -r run lint",
+    "clean": "pnpm -r run clean",
+    "setup": "bash scripts/setup-dev.sh"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.5.0",
+    "vitest": "^3.2.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

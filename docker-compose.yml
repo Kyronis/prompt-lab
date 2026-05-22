@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: promptlab-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: promptlab
+    ports:
+      - "5432:5432"
+    volumes:
+      - promptlab_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d promptlab"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - promptlab
+
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    container_name: promptlab-backend
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/promptlab
+      JWT_SECRET: ${JWT_SECRET:-promptlab-local-secret-change-me-in-production}
+      JWT_ACCESS_TTL: 3600
+      JWT_REFRESH_TTL: 604800
+      PORT: 4000
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - promptlab
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: /api
+    container_name: promptlab-web
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+    depends_on:
+      - backend
+    networks:
+      - promptlab
+    restart: unless-stopped
+
+volumes:
+  promptlab_pgdata:
+
+networks:
+  promptlab:
+    driver: bridge

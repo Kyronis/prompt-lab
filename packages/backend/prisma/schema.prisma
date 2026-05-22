@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("USER")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  prompts    Prompt[]
+  executions PromptExecution[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  prompts Prompt[]
+
+  @@map("projects")
+}
+
+model Prompt {
+  id          String   @id @default(uuid())
+  name        String
+  content     String
+  description String?
+  tags        String[] @default([])
+  version     Int      @default(1)
+  isPublic    Boolean  @default(false) @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  projectId String?  @map("project_id")
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  versions   PromptVersion[]
+  executions PromptExecution[]
+
+  @@index([projectId])
+  @@index([userId])
+  @@index([isPublic])
+  @@map("prompts")
+}
+
+model PromptVersion {
+  id        String   @id @default(uuid())
+  content   String
+  version   Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  promptId String @map("prompt_id")
+  prompt   Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  @@index([promptId])
+  @@map("prompt_versions")
+}
+
+model ModelProvider {
+  id         String   @id @default(uuid())
+  name       String
+  providerId String   @unique @map("provider_id")
+  baseUrl    String   @map("base_url")
+  apiKey     String   @map("api_key")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  models Model[]
+
+  @@map("model_providers")
+}
+
+model Model {
+  id                   String   @id @default(uuid())
+  modelId              String   @map("model_id")
+  name                 String
+  maxTokens            Int      @map("max_tokens")
+  isMultimodal         Boolean  @default(false) @map("is_multimodal")
+  supportsDeepThinking Boolean  @default(false) @map("supports_deep_thinking")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  providerId String        @map("provider_id")
+  provider   ModelProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  executions PromptExecution[]
+
+  @@index([providerId])
+  @@map("models")
+}
+
+model PromptExecution {
+  id             String   @id @default(uuid())
+  promptContent  String   @map("prompt_content")
+  userInput      String?  @map("user_input")
+  modelId        String   @map("model_id")
+  temperature    Float    @default(0.7)
+  maxTokens      Int?     @map("max_tokens")
+  result         String?
+  error          String?
+  durationMs     Int?     @map("duration_ms")
+  promptVersion  Int?     @map("prompt_version")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  promptId String? @map("prompt_id")
+  prompt   Prompt? @relation(fields: [promptId], references: [id], onDelete: SetNull)
+
+  model Model @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([promptId])
+  @@index([modelId])
+  @@index([userId])
+  @@map("prompt_executions")
+}
