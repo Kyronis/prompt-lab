@@ -1,5 +1,6 @@
 import { fetchPrompts } from '@/lib/api';
 import { Terminal, Tag, Clock } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function PromptsPage() {
   let prompts = [];
@@ -27,9 +28,10 @@ export default async function PromptsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {prompts.map((prompt: any) => (
-            <div
+            <Link
               key={prompt.id}
-              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+              href={`/prompts/${prompt.id}`}
+              className="block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-start justify-between">
                 <h3 className="font-semibold text-gray-900 line-clamp-1">{prompt.name}</h3>
@@ -55,7 +57,7 @@ export default async function PromptsPage() {
                 <Clock className="h-3 w-3" />
                 v{prompt.version}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
